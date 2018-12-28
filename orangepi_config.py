@@ -7,8 +7,8 @@ DB_NAME = 'data.db'
 
 MQTT_CONFIG = {
     'client_id': 'orangepi_' + str(uuid.uuid4()),
-    'user_name': '*',
-    'user_pwd': '*',
+    'user_name': 'alonebo',
+    'user_pwd': '976447044',
     'server_host': 'iot.alonebo.top',
     'server_port': 1883,
     'keepalive': 60,
