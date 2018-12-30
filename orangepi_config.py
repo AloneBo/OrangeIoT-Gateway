@@ -1,7 +1,7 @@
 import uuid
 import logging
 
-LOG_LEVEL = logging.ERROR
+LOG_LEVEL = logging.INFO
 
 DB_NAME = 'data.db'
 
@@ -17,9 +17,9 @@ MQTT_CONFIG = {
 }
 
 ARDUINO_CLIENTS = {
-    'arduino01_sensors': {'ip': '192.168.0.100', 'port': 9000},
-    'arduino02_relay': {'ip': '192.168.0.101', 'port': 9000},
-    # 'arduino03_nodemcu': {'ip': '192.168.0.103', 'port': 9000},
+    'arduino01_sensors': {'ip': '192.168.0.102', 'port': 9000},
+    'arduino02_relay': {'ip': '192.168.0.103', 'port': 9000},
+    'arduino03_nodemcu': {'ip': '192.168.0.101', 'port': 9000},
 }
 
 
