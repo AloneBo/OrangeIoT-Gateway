@@ -1,9 +1,10 @@
 import socket
 import logging
 
-class ArduinoClientSocket(object):
+
+class EspClientSocket(object):
     """
-    arduino通信客户端
+    ESP8266通信客户端
     """
     def __init__(self, *, host="127.0.0.1", port=9000, name=''):
         self.host = host
@@ -14,7 +15,6 @@ class ArduinoClientSocket(object):
 
         self.client.setblocking(False)  # 设置不阻塞
         self.client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # 端口复用
-        # self.client.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)  # keepalive
         self.on_message = None
         self.name = name
 

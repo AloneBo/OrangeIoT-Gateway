@@ -1,6 +1,6 @@
 import logging
 from src.mqtt_client import MQTTClient
-from src.arduino_client import ArduinoClientSocket
+from src.esp_client import EspClientSocket
 from src.message_broker import MessageBroker
 from src.tasks import g_tasks, g_late_task
 import select
@@ -26,7 +26,7 @@ class Main(object):
     """
     def __init__(self):
 
-        # 创建arduino MessageBroker MQTTClient客户端
+        # ESP MessageBroker MQTTClient客户端
         try:
             self.mqtt_client = MQTTClient(**orangepi_config.MQTT_CONFIG)
         except Exception as e:
@@ -35,18 +35,18 @@ class Main(object):
 
         self.mqtt_socket = self.mqtt_client.socket
 
-        self.arduino_clients = []
+        self.esp_clients = []
 
-        for k in orangepi_config.ARDUINO_CLIENTS:
-            item = orangepi_config.ARDUINO_CLIENTS[k]
+        for k in orangepi_config.ESP_CLIENTS:
+            item = orangepi_config.ESP_CLIENTS[k]
             ip = item.get('ip', '127.0.0.1')
             port = item.get('port', 9000)
-            self.arduino_clients.append(ArduinoClientSocket(host=ip, port=port, name=k))
+            self.esp_clients.append(EspClientSocket(host=ip, port=port, name=k))
 
-        self.arduino_sockets = [client.socket for client in self.arduino_clients]
+        self.esp_sockets = [client.socket for client in self.esp_clients]
 
         # 创建消息中间人
-        self.broker = MessageBroker(self.mqtt_client, self.arduino_clients, orangepi_config.MQTT_CONFIG)
+        self.broker = MessageBroker(self.mqtt_client, self.esp_clients, orangepi_config.MQTT_CONFIG)
 
     def loop(self):
         s_time = time.time()
@@ -56,7 +56,7 @@ class Main(object):
             logging.debug('.')
             try:
                 r, w, e = select.select(
-                    [self.mqtt_socket, *self.arduino_sockets],  # 监听读事件的 套接字 Arduino Client
+                    [self.mqtt_socket, *self.esp_sockets],  # 监听读事件的 套接字 ESP Client
                     [self.mqtt_socket] if self.mqtt_client.want_write() else [],  # 监听写事件
                     [],
                     SELECT_TIME_OUT  # timeout
@@ -64,11 +64,6 @@ class Main(object):
             except Exception as e:
                 logging.error(e)
                 time.sleep(10)
-                # try:
-                #     self.mqtt_client = MQTTClient(**orangepi_config.MQTT_CONFIG)
-                # except Exception as e:
-                #     logging.error(e)
-                # continue
 
             if self.mqtt_socket in r:
                 self.mqtt_client.loop_read()
@@ -79,19 +74,19 @@ class Main(object):
             self.mqtt_client.loop_misc()
 
             # check if need to read.
-            for i, sock in enumerate(self.arduino_sockets):
+            for i, sock in enumerate(self.esp_sockets):
                 if sock not in r:
                     continue
                 try:
                     data = sock.recv(SOCKET_READ_BUFFER)  # 接收数据
-                    arduino_client = self.arduino_clients[i]
+                    esp_client = self.esp_clients[i]
                     try:
-                        arduino_client.on_message(arduino_client, data.decode())
+                        esp_client.on_message(esp_client, data.decode())
                     except Exception as e:
                         logging.error(e)
                     # set last data update time
-                    k = self.arduino_clients[i].name
-                    v = orangepi_config.ARDUINO_CLIENTS.get(k, None)
+                    k = self.esp_clients[i].name
+                    v = orangepi_config.ESP_CLIENTS.get(k, None)
                     if v:
                         v['last_update_time'] = time.time()
                         logging.info("update last time: {}".format(k))
@@ -146,12 +141,12 @@ class Main(object):
 
     def check_time_out(self):
         logging.info('开始检查超时元素')
-        logging.info(orangepi_config.ARDUINO_CLIENTS)  # ok
+        logging.info(orangepi_config.ESP_CLIENTS)  # ok
 
         flag = False
 
-        for k in orangepi_config.ARDUINO_CLIENTS:
-            item = orangepi_config.ARDUINO_CLIENTS[k]
+        for k in orangepi_config.ESP_CLIENTS:
+            item = orangepi_config.ESP_CLIENTS[k]
             last_time = item.get('last_update_time', time.time())
             if (time.time() - last_time) >= SELECT_TIME_OUT:
                 logging.warning('{} 检查到数据超时， 相差{}秒 上次数据时间{}, 现在时间{}'.format(k, int(time.time()-last_time), int(last_time), int(time.time())))
@@ -159,10 +154,10 @@ class Main(object):
                 flag = True
 
         if flag is False:
-            logging.info('此次检查没有发现新的异常Arduino Client')
+            logging.info('ESP Client')
 
-        for i, k in enumerate(orangepi_config.ARDUINO_CLIENTS):
-            item = orangepi_config.ARDUINO_CLIENTS[k]
+        for i, k in enumerate(orangepi_config.ESP_CLIENTS):
+            item = orangepi_config.ESP_CLIENTS[k]
             if not item.get('is_timeout', False):
                 continue
 
@@ -170,7 +165,7 @@ class Main(object):
             port = item.get('port', 9000)
             if not item.get('is_reconnecting', False):
                 logging.warning('创建新线程')
-                logging.warning('重连第{}个Arduino socket'.format(i))
+                logging.warning('重连第{}ESP socket'.format(i))
                 t = threading.Thread(target=self.connect, args=(ip, port, k, i))
                 t.setDaemon(True)
                 t.start()
@@ -179,26 +174,26 @@ class Main(object):
 
     def connect(self, host, port, name, ii):
         logging.warning('name = {}'.format(name))
-        orangepi_config.ARDUINO_CLIENTS[name]['is_connecting'] = True
-        logging.warning(orangepi_config.ARDUINO_CLIENTS[name])
+        orangepi_config.ESP_CLIENTS[name]['is_connecting'] = True
+        logging.warning(orangepi_config.ESP_CLIENTS[name])
         try:
-            arduino = ArduinoClientSocket(host=host, port=port, name=name)
+            esp = EspClientSocket(host=host, port=port, name=name)
         except Exception as e:
             logging.error('main.py [loop-sub-thread]: reconnect failure!, name: {}'.format(name))
             # print(e)
         else:  #
             logging.info('重连成功pop(ii) = {}'.format(ii))
 
-            self.arduino_clients[ii] = arduino
-            orangepi_config.ARDUINO_CLIENTS[name]['is_timeout'] = False
-            orangepi_config.ARDUINO_CLIENTS[name]['last_update_time'] = time.time()
+            self.esp_clients[ii] = esp
+            orangepi_config.ESP_CLIENTS[name]['is_timeout'] = False
+            orangepi_config.ESP_CLIENTS[name]['last_update_time'] = time.time()
             logging.info('reconnect success [loop-sub-thread]!, name: {}'.format(name))
             # Flush
-            self.arduino_sockets = [client.socket for client in self.arduino_clients]
-            self.broker.flush_arduino_clients()
+            self.esp_sockets = [client.socket for client in self.esp_clients]
+            self.broker.flush_esp_clients()
             logging.info('flush')
         finally:
-            orangepi_config.ARDUINO_CLIENTS[name]['is_connecting'] = False
+            orangepi_config.ESP_CLIENTS[name]['is_connecting'] = False
 
 
 if __name__ == '__main__':

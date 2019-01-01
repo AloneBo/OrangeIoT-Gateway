@@ -32,7 +32,7 @@ def pd_init(b):
 
 
 @reroute(r'^.{2}_(.{1,2})_10_(\d*)')
-def upload_data(client, mqtt_client, arduino_clients, data, groups):
+def upload_data(client, mqtt_client, esp_clients, data, groups):
     logging.debug('new data start' + '*' *20)
     logging.debug(groups)
     logging.debug('new data end' + '*' * 20)
@@ -40,13 +40,13 @@ def upload_data(client, mqtt_client, arduino_clients, data, groups):
 
 
 @reroute(r'^01_(0.{1})_10_(\d*)')
-def relay_value(client, mqtt_client, arduino_clients, data, groups):
+def relay_value(client, mqtt_client, esp_clients, data, groups):
     logging.info('relay_value ')
     STATUS['cur_relay_state'][groups[0]] = groups[1]
 
 
 @reroute(r'^01_(1.{1})_10_(\d*)')
-def temperature_value(client, mqtt_client, arduino_clients, data, groups):
+def temperature_value(client, mqtt_client, esp_clients, data, groups):
     """
     01_10_10_18.00 [温]度
     :param client:
@@ -65,19 +65,19 @@ def temperature_value(client, mqtt_client, arduino_clients, data, groups):
         logging.info('调用自动控制-温度')
         if prefix_threshold == '>':
             if float(groups[1]) > float(value_threshold):
-                # 发送数据给arduino
+                # 发送数据给esp
                 if STATUS['cur_relay_state'].get('00', 'NODATA') == '1' and operator == '关':
-                    send_msg_by_name(arduino_clients, 'close:0', 'arduino02_relay')
+                    send_msg_by_name(esp_clients, 'close:0', 'esp02_relay')
                 elif STATUS['cur_relay_state'].get('00', 'NODATA') == '0' and operator == '开':
-                    send_msg_by_name(arduino_clients, 'open:0', 'arduino02_relay')
+                    send_msg_by_name(esp_clients, 'open:0', 'esp02_relay')
 
         elif prefix_threshold == '<':
             if float(groups[1]) < float(value_threshold):
-                # 发送数据给arduino
+                # 发送数据给esp
                 if STATUS['cur_relay_state'].get('00', 'NODATA') == '1' and operator == '关':
-                    send_msg_by_name(arduino_clients, 'close:0', 'arduino02_relay')
+                    send_msg_by_name(esp_clients, 'close:0', 'esp02_relay')
                 elif STATUS['cur_relay_state'].get('00', 'NODATA') == '0' and operator == '开':
-                    send_msg_by_name(arduino_clients, 'open:0', 'arduino02_relay')
+                    send_msg_by_name(esp_clients, 'open:0', 'esp02_relay')
     logging.info(STATUS['last_time_data'])
     l_tmp_value = STATUS['last_time_data'].get('l_tmp_value', 0)
 
@@ -91,7 +91,7 @@ def temperature_value(client, mqtt_client, arduino_clients, data, groups):
 
 
 @reroute(r'^01_(2.{1})_10_(\d*)')
-def humidity_value(client, mqtt_client, arduino_clients, data, groups):
+def humidity_value(client, mqtt_client, esp_clients, data, groups):
     """
     01_20_10_54.00 湿度
     :param client:
@@ -108,19 +108,19 @@ def humidity_value(client, mqtt_client, arduino_clients, data, groups):
         value_threshold = threshold[1:] if len(threshold) > 2 else None
         if prefix_threshold == '>':
             if float(groups[1]) > float(value_threshold):
-                # 发送数据给arduino
+                # 发送数据给esp
                 if STATUS['cur_relay_state'].get('01', 'NODATA') == '1' and operator == '关':
-                    send_msg_by_name(arduino_clients, 'close:1', 'arduino02_relay')
+                    send_msg_by_name(esp_clients, 'close:1', 'esp02_relay')
                 elif STATUS['cur_relay_state'].get('01', 'NODATA') == '0' and operator == '开':
-                    send_msg_by_name(arduino_clients, 'open:1', 'arduino02_relay')
+                    send_msg_by_name(esp_clients, 'open:1', 'esp02_relay')
 
         elif prefix_threshold == '<':
             if float(groups[1]) < float(value_threshold):
-                # 发送数据给arduino
+                # 发送数据给esp
                 if STATUS['cur_relay_state'].get('01', 'NODATA') == '1' and operator == '关':
-                    send_msg_by_name(arduino_clients, 'close:1', 'arduino02_relay')
+                    send_msg_by_name(esp_clients, 'close:1', 'esp02_relay')
                 elif STATUS['cur_relay_state'].get('01', 'NODATA') == '0' and operator == '开':
-                    send_msg_by_name(arduino_clients, 'open:1', 'arduino02_relay')
+                    send_msg_by_name(esp_clients, 'open:1', 'esp02_relay')
 
     l_hum_value = STATUS['last_time_data'].get('l_hum_value', 0)
 
@@ -134,7 +134,7 @@ def humidity_value(client, mqtt_client, arduino_clients, data, groups):
 
 
 @reroute(r'01_(3.{1})_10_(\d*)')
-def mq2_value(client, mqtt_client, arduino_clients, data, groups):
+def mq2_value(client, mqtt_client, esp_clients, data, groups):
     """
     01_30_10_120 MQ2
     :param client:
@@ -159,7 +159,7 @@ def mq2_value(client, mqtt_client, arduino_clients, data, groups):
 
 
 @reroute(r'01_(4.{1})_10_(\d*)')
-def light_value(client, mqtt_client, arduino_clients, data, groups):
+def light_value(client, mqtt_client, esp_clients, data, groups):
     """
     01_40_10_54.00 光照
     :param client:
@@ -172,21 +172,21 @@ def light_value(client, mqtt_client, arduino_clients, data, groups):
 
 
 @mqtt_reroute(r'open:\d*')
-def open_msg(mqtt_client, arduino_clients, data):
+def open_msg(mqtt_client, esp_clients, data):
     logging.info('open_msg->', data)
-    for i in arduino_clients:
+    for i in esp_clients:
         i.send_msg(data)
 
 
 @mqtt_reroute(r'close:\d*')
-def close_msg(mqtt_client, arduino_clients, data):
+def close_msg(mqtt_client, esp_clients, data):
     logging.info('close_msg->', data)
-    for i in arduino_clients:
+    for i in esp_clients:
         i.send_msg(data)
 
 
 @mqtt_reroute(r'query_auto_ctl_cfg')
-def query_autoctl_msg(mqtt_client, arduino_clients, data):
+def query_autoctl_msg(mqtt_client, esp_clients, data):
     logging.info('autoctl_msg: query_auto_ctl_cfg}')
     try:
         d = json.dumps(STATUS['cur_auto_ctl'])
@@ -197,7 +197,7 @@ def query_autoctl_msg(mqtt_client, arduino_clients, data):
 
 
 @mqtt_reroute('autoctl:(.*)')
-def autoctl_upload(mqtt_client, arduino_clients, data, groups):
+def autoctl_upload(mqtt_client, esp_clients, data, groups):
     logging.info('autoctl_upload: ', groups[0])
     try:
         o = json.loads(groups[0])
@@ -210,14 +210,14 @@ def autoctl_upload(mqtt_client, arduino_clients, data, groups):
 
 
 @mqtt_reroute(r'query_relay_state')
-def query_relay_state(mqtt_client, arduino_clients, data):
+def query_relay_state(mqtt_client, esp_clients, data):
     logging.info('relay_state: query_relay_state')
-    for i in arduino_clients:
+    for i in esp_clients:
         i.send_msg('query_relay_state')
 
 
 @mqtt_reroute(r'query_history_data:(.*)')
-def query_history_data(mqtt_client, arduino_clients, data, groups):
+def query_history_data(mqtt_client, esp_clients, data, groups):
     logging.info('query_history_data: ', groups[0])
     try:
         o = json.loads(groups[0])
@@ -239,7 +239,7 @@ def query_history_data(mqtt_client, arduino_clients, data, groups):
 
 
 @mqtt_reroute(r'query_email')
-def query_email(mqtt_client, arduino_clients, data):
+def query_email(mqtt_client, esp_clients, data):
     logging.info('query_email')
     try:
         d = json.dumps(STATUS['email'])
@@ -250,7 +250,7 @@ def query_email(mqtt_client, arduino_clients, data):
 
 
 @mqtt_reroute(r'email:(.*)')
-def upload_email(mqtt_client, arduino_clients, data, groups):
+def upload_email(mqtt_client, esp_clients, data, groups):
     logging.info('upload_email')
     try:
         d = json.loads(groups[0])

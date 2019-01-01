@@ -8,8 +8,8 @@ import multiprocessing
 # logging = logging.getLogger(__name__)
 
 
-def send_msg_by_name(arduino_clients, msg, name):
-    for c in arduino_clients:
+def send_msg_by_name(esp_clients, msg, name):
+    for c in esp_clients:
         try:
             if c.name == name:
                 c.send_msg(msg)

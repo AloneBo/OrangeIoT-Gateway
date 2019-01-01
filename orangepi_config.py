@@ -16,7 +16,7 @@ MQTT_CONFIG = {
     'subscribe_topic': "arduino_server/01"  # 订阅消息主题
 }
 
-ARDUINO_CLIENTS = {
+ESP_CLIENTS = {
     'arduino01_sensors': {'ip': '192.168.0.102', 'port': 9000},
     'arduino02_relay': {'ip': '192.168.0.103', 'port': 9000},
     'arduino03_nodemcu': {'ip': '192.168.0.101', 'port': 9000},
@@ -24,7 +24,7 @@ ARDUINO_CLIENTS = {
 
 
 if __name__ == '__main__':
-    for i, k in enumerate(ARDUINO_CLIENTS):
-        print(ARDUINO_CLIENTS[k], i)
+    for i, k in enumerate(ESP_CLIENTS):
+        print(ESP_CLIENTS[k], i)
     print(MQTT_CONFIG)
-    print(list(ARDUINO_CLIENTS))
+    print(list(ESP_CLIENTS))
