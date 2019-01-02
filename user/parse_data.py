@@ -67,17 +67,17 @@ def temperature_value(client, mqtt_client, esp_clients, data, groups):
             if float(groups[1]) > float(value_threshold):
                 # 发送数据给esp
                 if STATUS['cur_relay_state'].get('00', 'NODATA') == '1' and operator == '关':
-                    send_msg_by_name(esp_clients, 'close:0', 'esp02_relay')
+                    send_msg_by_name(esp_clients, 'close:0', 'arduino02_relay')
                 elif STATUS['cur_relay_state'].get('00', 'NODATA') == '0' and operator == '开':
-                    send_msg_by_name(esp_clients, 'open:0', 'esp02_relay')
+                    send_msg_by_name(esp_clients, 'open:0', 'arduino02_relay')
 
         elif prefix_threshold == '<':
             if float(groups[1]) < float(value_threshold):
                 # 发送数据给esp
                 if STATUS['cur_relay_state'].get('00', 'NODATA') == '1' and operator == '关':
-                    send_msg_by_name(esp_clients, 'close:0', 'esp02_relay')
+                    send_msg_by_name(esp_clients, 'close:0', 'arduino02_relay')
                 elif STATUS['cur_relay_state'].get('00', 'NODATA') == '0' and operator == '开':
-                    send_msg_by_name(esp_clients, 'open:0', 'esp02_relay')
+                    send_msg_by_name(esp_clients, 'open:0', 'arduino02_relay')
     logging.info(STATUS['last_time_data'])
     l_tmp_value = STATUS['last_time_data'].get('l_tmp_value', 0)
 
@@ -110,17 +110,17 @@ def humidity_value(client, mqtt_client, esp_clients, data, groups):
             if float(groups[1]) > float(value_threshold):
                 # 发送数据给esp
                 if STATUS['cur_relay_state'].get('01', 'NODATA') == '1' and operator == '关':
-                    send_msg_by_name(esp_clients, 'close:1', 'esp02_relay')
+                    send_msg_by_name(esp_clients, 'close:1', 'arduino02_relay')
                 elif STATUS['cur_relay_state'].get('01', 'NODATA') == '0' and operator == '开':
-                    send_msg_by_name(esp_clients, 'open:1', 'esp02_relay')
+                    send_msg_by_name(esp_clients, 'open:1', 'arduino02_relay')
 
         elif prefix_threshold == '<':
             if float(groups[1]) < float(value_threshold):
                 # 发送数据给esp
                 if STATUS['cur_relay_state'].get('01', 'NODATA') == '1' and operator == '关':
-                    send_msg_by_name(esp_clients, 'close:1', 'esp02_relay')
+                    send_msg_by_name(esp_clients, 'close:1', 'arduino02_relay')
                 elif STATUS['cur_relay_state'].get('01', 'NODATA') == '0' and operator == '开':
-                    send_msg_by_name(esp_clients, 'open:1', 'esp02_relay')
+                    send_msg_by_name(esp_clients, 'open:1', 'arduino02_relay')
 
     l_hum_value = STATUS['last_time_data'].get('l_hum_value', 0)
 
