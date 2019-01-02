@@ -198,7 +198,7 @@ def query_autoctl_msg(mqtt_client, esp_clients, data):
 
 @mqtt_reroute('autoctl:(.*)')
 def autoctl_upload(mqtt_client, esp_clients, data, groups):
-    logging.info('autoctl_upload: ', groups[0])
+    logging.info('autoctl_upload: {}'.format( groups[0]))
     try:
         o = json.loads(groups[0])
     except Exception as e:

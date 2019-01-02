@@ -10,8 +10,9 @@ class EspClientSocket(object):
         self.host = host
         self.port = port
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+        logging.info('start connecting to {}:{}'.format(host, port))
         self.client.connect((host, port))
+
 
         self.client.setblocking(False)  # 设置不阻塞
         self.client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # 端口复用

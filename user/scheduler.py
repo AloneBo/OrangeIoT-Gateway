@@ -63,9 +63,9 @@ def ctl_relay():
 
     # 发送数据给arduino
     if STATUS['cur_relay_state'].get('02', 'NODATA') == '1' and operator == '关':
-        send_msg_by_name(broker.arduino_clients, 'close:2', 'arduino03_nodemcu')
+        send_msg_by_name(broker.esp_clients, 'close:2', 'arduino03_nodemcu')
     elif STATUS['cur_relay_state'].get('02', 'NODATA') == '0' and operator == '开':
-        send_msg_by_name(broker.arduino_clients, 'open:2', 'arduino03_nodemcu')
+        send_msg_by_name(broker.esp_clients, 'open:2', 'arduino03_nodemcu')
 
 
 
