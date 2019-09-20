@@ -26,7 +26,7 @@ def send_mail(reciver, title, content):
 def _send_email(reciver, title, content):
 
     msg_from = 'alonebo.zhou@qq.com'  # 发送方邮箱
-    passwd = 'timyoawmsoisbfge'  # 填入发送方邮箱的授权码
+    passwd = ''  # 填入发送方邮箱的授权码
     msg_to = reciver  # 收件人邮箱
 
     subject = title  # 主题
